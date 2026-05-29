@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>九宫格程序</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 650px;
+            width: 100%;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 25px;
+            font-size: 28px;
+        }
+        
+        .settings {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .setting-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        label {
+            color: #555;
+            font-weight: 500;
+        }
+        
+        input[type="number"] {
+            width: 60px;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            text-align: center;
+            transition: border-color 0.3s;
+            outline: none;
+        }
+        
+        input[type="number"]:focus {
+            border-color: #667eea;
+        }
+        
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        input[type="color"] {
+            width: 50px;
+            height: 40px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            padding: 2px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            outline: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #555;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .btn-danger {
+            background: #ff6b6b;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #ee5a5a;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: #51cf66;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #40c057;
+            transform: translateY(-2px);
+        }
+        
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .color-palette {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .color-option {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+        
+        .color-option.active {
+            border-color: #333;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+        
+        .grid-container {
+            display: flex;
+            justify-content: center;
+            overflow-x: auto;
+            padding: 10px;
+        }
+        
+        .grid {
+            display: grid;
+            gap: 6px;
+            background: #e0e0e0;
+            padding: 6px;
+            border-radius: 12px;
+        }
+        
+        .cell {
+            width: 45px;
+            height: 45px;
+            background: white;
+            border: 2px solid #d0d0d0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: transparent;
+        }
+        
+        .cell:hover {
+            transform: scale(1.05);
+            border-color: #667eea;
+        }
+        
+        .cell.lit {
+            border-color: #667eea;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .status {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 480px) {
+            .cell {
+                width: 35px;
+                height: 35px;
+                font-size: 14px;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>九宫格程序</h1>
+        
+        <div class="settings">
+            <div class="setting-item">
+                <label for="rows">行数:</label>
+                <input type="number" id="rows" min="1" max="9" value="3">
+            </div>
+            <div class="setting-item">
+                <label for="cols">列数:</label>
+                <input type="number" id="cols" min="1" max="9" value="3">
+            </div>
+            <button class="btn-primary" onclick="createGrid()">创建</button>
+        </div>
+        
+        <div class="color-palette">
+            <label>颜色:</label>
+            <div class="color-option active" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" data-color="linear-gradient(135deg, #667eea 0%, #764ba2 100%)" onclick="selectColor(this)"></div>
+            <div class="color-option" style="background: #ff6b6b;" data-color="#ff6b6b" onclick="selectColor(this)"></div>
+            <div class="color-option" style="background: #f06595;" data-color="#f06595" onclick="selectColor(this)"></div>
+            <div class="color-option" style="background: #cc5de8;" data-color="#cc5de8" onclick="selectColor(this)"></div>
+            <div class="color-option" style="background: #51cf66;" data-color="#51cf66" onclick="selectColor(this)"></div>
+            <div class="color-option" style="background: #22b8cf;" data-color="#22b8cf" onclick="selectColor(this)"></div>
+            <div class="color-option" style="background: #339af0;" data-color="#339af0" onclick="selectColor(this)"></div>
+            <div class="color-option" style="background: #ffd43b;" data-color="#ffd43b" onclick="selectColor(this)"></div>
+            <div class="color-option" style="background: #868e96;" data-color="#868e96" onclick="selectColor(this)"></div>
+            <div class="color-option" style="background: #212529;" data-color="#212529" onclick="selectColor(this)"></div>
+            <div class="setting-item">
+                <input type="color" id="customColor" value="#667eea" onchange="customColorChange(this)">
+            </div>
+        </div>
+        
+        <div class="btn-group">
+            <button class="btn-secondary" onclick="undo()" id="undoBtn" disabled>撤销</button>
+            <button class="btn-danger" onclick="resetGrid()">重置</button>
+            <button class="btn-success" onclick="saveImage()">保存图片</button>
+        </div>
+        
+        <div class="grid-container" id="gridContainer"></div>
+        
+        <div class="status" id="status">点击格子点亮/熄灭</div>
+    </div>
+
+    <script>
+        const gridContainer = document.getElementById('gridContainer');
+        const status = document.getElementById('status');
+        const undoBtn = document.getElementById('undoBtn');
+        
+        let grid = [];
+        let history = [];
+        let rows = 3;
+        let cols = 3;
+        let currentColor = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        
+        function createGrid() {
+            const newRows = parseInt(document.getElementById('rows').value);
+            const newCols = parseInt(document.getElementById('cols').value);
+            
+            if (newRows < 1 || newRows > 9 || newCols < 1 || newCols > 9) {
+                alert('请输入1-9之间的数字');
+                return;
+            }
+            
+            rows = newRows;
+            cols = newCols;
+            grid = [];
+            history = [];
+            
+            for (let i = 0; i < rows; i++) {
+                grid[i] = [];
+                for (let j = 0; j < cols; j++) {
+                    grid[i][j] = false;
+                }
+            }
+            
+            renderGrid();
+            updateStatus();
+            updateUndoButton();
+        }
+        
+        function renderGrid() {
+            gridContainer.innerHTML = '';
+            
+            const gridElement = document.createElement('div');
+            gridElement.className = 'grid';
+            gridElement.id = 'gridToSave';
+            gridElement.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = `cell ${grid[i][j] ? 'lit' : ''}`;
+                    if (grid[i][j]) {
+                        cell.style.background = currentColor;
+                    }
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    cell.onclick = toggleCell;
+                    gridElement.appendChild(cell);
+                }
+            }
+            
+            gridContainer.appendChild(gridElement);
+        }
+        
+        function toggleCell(e) {
+            const row = parseInt(e.target.dataset.row);
+            const col = parseInt(e.target.dataset.col);
+            
+            saveState();
+            
+            grid[row][col] = !grid[row][col];
+            
+            e.target.classList.toggle('lit');
+            if (grid[row][col]) {
+                e.target.style.background = currentColor;
+            } else {
+                e.target.style.background = 'white';
+            }
+            updateStatus();
+            updateUndoButton();
+        }
+        
+        function saveState() {
+            const state = grid.map(row => [...row]);
+            history.push(state);
+            
+            if (history.length > 50) {
+                history.shift();
+            }
+        }
+        
+        function undo() {
+            if (history.length === 0) return;
+            
+            grid = history.pop();
+            renderGrid();
+            updateStatus();
+            updateUndoButton();
+        }
+        
+        function resetGrid() {
+            saveState();
+            
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    grid[i][j] = false;
+                }
+            }
+            
+            renderGrid();
+            updateStatus();
+            updateUndoButton();
+        }
+        
+        function updateStatus() {
+            let litCount = 0;
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    if (grid[i][j]) litCount++;
+                }
+            }
+            status.textContent = `已点亮 ${litCount} / ${rows * cols} 个格子`;
+        }
+        
+        function updateUndoButton() {
+            undoBtn.disabled = history.length === 0;
+        }
+        
+        function selectColor(element) {
+            document.querySelectorAll('.color-option').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            currentColor = element.dataset.color;
+            updateLitCellsColor();
+        }
+        
+        function customColorChange(element) {
+            currentColor = element.value;
+            document.querySelectorAll('.color-option').forEach(el => el.classList.remove('active'));
+            updateLitCellsColor();
+        }
+        
+        function updateLitCellsColor() {
+            const cells = document.querySelectorAll('.cell.lit');
+            cells.forEach(cell => {
+                cell.style.background = currentColor;
+            });
+        }
+        
+        function saveImage() {
+            const grid = document.getElementById('gridToSave');
+            const canvas = document.createElement('canvas');
+            const scale = 4;
+            
+            const cellSize = 45;
+            const gap = 6;
+            const padding = 6;
+            const borderWidth = 2;
+            
+            const width = cols * (cellSize + gap) - gap + padding * 2;
+            const height = rows * (cellSize + gap) - gap + padding * 2;
+            
+            canvas.width = width * scale;
+            canvas.height = height * scale;
+            const ctx = canvas.getContext('2d');
+            ctx.scale(scale, scale);
+            
+            ctx.fillStyle = '#e0e0e0';
+            roundRect(ctx, 0, 0, width, height, 12);
+            ctx.fill();
+            
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    const x = padding + j * (cellSize + gap);
+                    const y = padding + i * (cellSize + gap);
+                    
+                    ctx.fillStyle = grid[i][j] ? (currentColor.includes('gradient') ? '#667eea' : currentColor) : 'white';
+                    ctx.strokeStyle = grid[i][j] ? '#667eea' : '#d0d0d0';
+                    ctx.lineWidth = borderWidth;
+                    roundRect(ctx, x, y, cellSize, cellSize, 8);
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    if (grid[i][j] && currentColor.includes('gradient')) {
+                        const gradient = ctx.createLinearGradient(x, y, x + cellSize, y + cellSize);
+                        gradient.addColorStop(0, '#667eea');
+                        gradient.addColorStop(1, '#764ba2');
+                        ctx.fillStyle = gradient;
+                        roundRect(ctx, x, y, cellSize, cellSize, 8);
+                        ctx.fill();
+                    }
+                }
+            }
+            
+            const link = document.createElement('a');
+            link.download = 'grid_' + new Date().toISOString().slice(0, 10) + '.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        function roundRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+        }
+        
+        createGrid();
+    </script>
+</body>
+</html>
