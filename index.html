@@ -573,8 +573,6 @@
             rInput.value = color.r;
             gInput.value = color.g;
             bInput.value = color.b;
-            
-            updateLitCellsColor();
         }
         
         // Event handlers for color picker
@@ -660,7 +658,6 @@
                 gInput.value = rgb.g;
                 bInput.value = rgb.b;
                 currentColor = hexInput.value;
-                updateLitCellsColor();
             }
         });
         
@@ -685,7 +682,6 @@
             colorPreview.style.background = hex;
             hexInput.value = hex;
             currentColor = hex;
-            updateLitCellsColor();
         }
         
         rInput.addEventListener('input', updateFromRGB);
@@ -710,7 +706,7 @@
             for (let i = 0; i < rows; i++) {
                 grid[i] = [];
                 for (let j = 0; j < cols; j++) {
-                    grid[i][j] = false;
+                    grid[i][j] = null;
                 }
             }
             
@@ -732,7 +728,7 @@
                     const cell = document.createElement('div');
                     cell.className = `cell ${grid[i][j] ? 'lit' : ''}`;
                     if (grid[i][j]) {
-                        cell.style.background = currentColor;
+                        cell.style.background = grid[i][j];
                     }
                     cell.dataset.row = i;
                     cell.dataset.col = j;
@@ -750,13 +746,14 @@
             
             saveState();
             
-            grid[row][col] = !grid[row][col];
-            
-            e.target.classList.toggle('lit');
             if (grid[row][col]) {
-                e.target.style.background = currentColor;
-            } else {
+                grid[row][col] = null;
+                e.target.classList.remove('lit');
                 e.target.style.background = 'white';
+            } else {
+                grid[row][col] = currentColor;
+                e.target.classList.add('lit');
+                e.target.style.background = currentColor;
             }
             updateStatus();
             updateUndoButton();
@@ -785,7 +782,7 @@
             
             for (let i = 0; i < rows; i++) {
                 for (let j = 0; j < cols; j++) {
-                    grid[i][j] = false;
+                    grid[i][j] = null;
                 }
             }
             
@@ -806,13 +803,6 @@
         
         function updateUndoButton() {
             undoBtn.disabled = history.length === 0;
-        }
-        
-        function updateLitCellsColor() {
-            const cells = document.querySelectorAll('.cell.lit');
-            cells.forEach(cell => {
-                cell.style.background = currentColor;
-            });
         }
         
         function saveImage() {
@@ -841,7 +831,7 @@
                     const x = padding + j * (cellSize + gap);
                     const y = padding + i * (cellSize + gap);
                     
-                    ctx.fillStyle = grid[i][j] ? currentColor : 'white';
+                    ctx.fillStyle = grid[i][j] ? grid[i][j] : 'white';
                     ctx.strokeStyle = grid[i][j] ? '#667eea' : '#d0d0d0';
                     ctx.lineWidth = borderWidth;
                     roundRect(ctx, x, y, cellSize, cellSize, 8);
