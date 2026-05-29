@@ -26,7 +26,7 @@
             border-radius: 20px;
             padding: 30px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 650px;
+            max-width: 750px;
             width: 100%;
         }
         
@@ -77,13 +77,20 @@
             margin: 0;
         }
         
-        input[type="color"] {
-            width: 50px;
-            height: 40px;
+        input[type="text"] {
+            width: 80px;
+            padding: 8px 10px;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
-            cursor: pointer;
-            padding: 2px;
+            font-size: 14px;
+            text-transform: uppercase;
+            font-family: monospace;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus {
+            border-color: #667eea;
         }
         
         button {
@@ -144,31 +151,138 @@
             flex-wrap: wrap;
         }
         
-        .color-palette {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
+        /* Color Picker Styles */
+        .color-picker-container {
+            background: #f5f5f5;
+            border-radius: 12px;
+            padding: 20px;
             margin-bottom: 20px;
-            flex-wrap: wrap;
-            align-items: center;
         }
         
-        .color-option {
-            width: 35px;
-            height: 35px;
+        .color-picker-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .color-picker-content {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .color-picker-canvas-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .color-picker-canvas {
+            position: relative;
+            cursor: crosshair;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .color-picker-canvas::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border: 2px solid white;
+            border-radius: 50%;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.3);
+            pointer-events: none;
+            left: var(--picker-x, 100px);
+            top: var(--picker-y, 50px);
+            transform: translate(-50%, -50%);
+        }
+        
+        .color-slider-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .color-slider {
+            width: 24px;
+            height: 200px;
+            background: linear-gradient(to bottom, red, orange, yellow, green, cyan, blue, purple, red);
             border-radius: 8px;
             cursor: pointer;
-            border: 3px solid transparent;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .color-slider::after {
+            content: '';
+            position: absolute;
+            left: -3px;
+            top: var(--slider-pos, 40px);
+            width: 30px;
+            height: 4px;
+            background: white;
+            border-radius: 2px;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.3);
+            pointer-events: none;
+            transform: translateY(-50%);
+        }
+        
+        .color-values {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .color-preview {
+            width: 100%;
+            height: 60px;
+            border-radius: 8px;
+            border: 3px solid #ddd;
+            background: #667eea;
+        }
+        
+        .color-input-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .color-input-label {
+            width: 30px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .color-input-row input[type="text"] {
+            width: 50px;
+        }
+        
+        /* Preset Colors */
+        .preset-colors {
+            margin-top: 15px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .preset-color {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 2px solid transparent;
             transition: all 0.2s;
         }
         
-        .color-option:hover {
+        .preset-color:hover {
             transform: scale(1.1);
-        }
-        
-        .color-option.active {
             border-color: #333;
-            box-shadow: 0 0 10px rgba(0,0,0,0.3);
         }
         
         .grid-container {
@@ -219,7 +333,7 @@
             font-size: 14px;
         }
         
-        @media (max-width: 480px) {
+        @media (max-width: 600px) {
             .cell {
                 width: 35px;
                 height: 35px;
@@ -232,6 +346,10 @@
             
             h1 {
                 font-size: 22px;
+            }
+            
+            .color-picker-content {
+                gap: 12px;
             }
         }
     </style>
@@ -252,21 +370,36 @@
             <button class="btn-primary" onclick="createGrid()">创建</button>
         </div>
         
-        <div class="color-palette">
-            <label>颜色:</label>
-            <div class="color-option active" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" data-color="linear-gradient(135deg, #667eea 0%, #764ba2 100%)" onclick="selectColor(this)"></div>
-            <div class="color-option" style="background: #ff6b6b;" data-color="#ff6b6b" onclick="selectColor(this)"></div>
-            <div class="color-option" style="background: #f06595;" data-color="#f06595" onclick="selectColor(this)"></div>
-            <div class="color-option" style="background: #cc5de8;" data-color="#cc5de8" onclick="selectColor(this)"></div>
-            <div class="color-option" style="background: #51cf66;" data-color="#51cf66" onclick="selectColor(this)"></div>
-            <div class="color-option" style="background: #22b8cf;" data-color="#22b8cf" onclick="selectColor(this)"></div>
-            <div class="color-option" style="background: #339af0;" data-color="#339af0" onclick="selectColor(this)"></div>
-            <div class="color-option" style="background: #ffd43b;" data-color="#ffd43b" onclick="selectColor(this)"></div>
-            <div class="color-option" style="background: #868e96;" data-color="#868e96" onclick="selectColor(this)"></div>
-            <div class="color-option" style="background: #212529;" data-color="#212529" onclick="selectColor(this)"></div>
-            <div class="setting-item">
-                <input type="color" id="customColor" value="#667eea" onchange="customColorChange(this)">
+        <div class="color-picker-container">
+            <div class="color-picker-title">颜色选择器</div>
+            <div class="color-picker-content">
+                <div class="color-picker-canvas-wrapper">
+                    <canvas id="colorCanvas" width="200" height="200" class="color-picker-canvas"></canvas>
+                </div>
+                <div class="color-slider-wrapper">
+                    <canvas id="colorSlider" width="24" height="200" class="color-slider"></canvas>
+                </div>
+                <div class="color-values">
+                    <div class="color-preview" id="colorPreview"></div>
+                    <div class="color-input-row">
+                        <span class="color-input-label">HEX</span>
+                        <input type="text" id="hexInput" value="#667EEA" placeholder="#667EEA">
+                    </div>
+                    <div class="color-input-row">
+                        <span class="color-input-label">R</span>
+                        <input type="text" id="rInput" value="102" placeholder="0-255">
+                    </div>
+                    <div class="color-input-row">
+                        <span class="color-input-label">G</span>
+                        <input type="text" id="gInput" value="126" placeholder="0-255">
+                    </div>
+                    <div class="color-input-row">
+                        <span class="color-input-label">B</span>
+                        <input type="text" id="bInput" value="234" placeholder="0-255">
+                    </div>
+                </div>
             </div>
+            <div class="preset-colors" id="presetColors"></div>
         </div>
         
         <div class="btn-group">
@@ -284,13 +417,282 @@
         const gridContainer = document.getElementById('gridContainer');
         const status = document.getElementById('status');
         const undoBtn = document.getElementById('undoBtn');
+        const colorCanvas = document.getElementById('colorCanvas');
+        const colorSlider = document.getElementById('colorSlider');
+        const colorPreview = document.getElementById('colorPreview');
+        const hexInput = document.getElementById('hexInput');
+        const rInput = document.getElementById('rInput');
+        const gInput = document.getElementById('gInput');
+        const bInput = document.getElementById('bInput');
         
         let grid = [];
         let history = [];
         let rows = 3;
         let cols = 3;
-        let currentColor = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        let currentColor = '#667eea';
+        let currentHue = 250;
+        let pickerPosition = { x: 100, y: 50 };
+        let sliderPosition = 40;
         
+        // Preset colors
+        const presetColors = [
+            '#ff6b6b', '#f06595', '#cc5de8', '#845ef7', '#667eea',
+            '#339af0', '#22b8cf', '#20c997', '#51cf66', '#ffd43b',
+            '#ff922b', '#868e96', '#495057', '#212529', '#ffffff'
+        ];
+        
+        function initColorPicker() {
+            drawColorSlider();
+            drawColorCanvas();
+            createPresetColors();
+            updateColorPickerUI();
+        }
+        
+        function drawColorSlider() {
+            const ctx = colorSlider.getContext('2d');
+            const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+            gradient.addColorStop(0, '#ff0000');
+            gradient.addColorStop(0.17, '#ff8000');
+            gradient.addColorStop(0.33, '#ffff00');
+            gradient.addColorStop(0.5, '#00ff00');
+            gradient.addColorStop(0.67, '#00ffff');
+            gradient.addColorStop(0.83, '#0000ff');
+            gradient.addColorStop(1, '#ff00ff');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 24, 200);
+            
+            colorSlider.style.setProperty('--slider-pos', sliderPosition + 'px');
+        }
+        
+        function drawColorCanvas() {
+            const ctx = colorCanvas.getContext('2d');
+            
+            const hue = currentHue;
+            const hueColor = hslToRgb(hue, 100, 50);
+            const hueStr = `rgb(${hueColor.r}, ${hueColor.g}, ${hueColor.b})`;
+            
+            const gradientX = ctx.createLinearGradient(0, 0, 200, 0);
+            gradientX.addColorStop(0, 'white');
+            gradientX.addColorStop(1, hueStr);
+            ctx.fillStyle = gradientX;
+            ctx.fillRect(0, 0, 200, 200);
+            
+            const gradientY = ctx.createLinearGradient(0, 0, 0, 200);
+            gradientY.addColorStop(0, 'rgba(0,0,0,0)');
+            gradientY.addColorStop(1, 'black');
+            ctx.fillStyle = gradientY;
+            ctx.fillRect(0, 0, 200, 200);
+            
+            colorCanvas.style.setProperty('--picker-x', pickerPosition.x + 'px');
+            colorCanvas.style.setProperty('--picker-y', pickerPosition.y + 'px');
+        }
+        
+        function createPresetColors() {
+            const container = document.getElementById('presetColors');
+            container.innerHTML = '';
+            presetColors.forEach(color => {
+                const div = document.createElement('div');
+                div.className = 'preset-color';
+                div.style.background = color;
+                div.onclick = () => selectPresetColor(color);
+                container.appendChild(div);
+            });
+        }
+        
+        function selectPresetColor(color) {
+            const rgb = hexToRgb(color);
+            if (rgb) {
+                const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+                currentHue = hsl.h;
+                const s = hsl.s * 2;
+                const l = (100 - hsl.l) * 2;
+                pickerPosition = { x: s, y: l };
+                sliderPosition = (hsl.h / 360) * 200;
+                drawColorSlider();
+                drawColorCanvas();
+                updateColorPickerUI();
+            }
+        }
+        
+        function hslToRgb(h, s, l) {
+            s /= 100;
+            l /= 100;
+            const k = n => (n + h / 30) % 12;
+            const a = s * Math.min(l, 1 - l);
+            const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+            return {
+                r: Math.round(f(0) * 255),
+                g: Math.round(f(8) * 255),
+                b: Math.round(f(4) * 255)
+            };
+        }
+        
+        function rgbToHsl(r, g, b) {
+            r /= 255; g /= 255; b /= 255;
+            const max = Math.max(r, g, b), min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2;
+            if (max === min) {
+                h = s = 0;
+            } else {
+                const d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch (max) {
+                    case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+                    case g: h = ((b - r) / d + 2) / 6; break;
+                    case b: h = ((r - g) / d + 4) / 6; break;
+                }
+            }
+            return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+        }
+        
+        function rgbToHex(r, g, b) {
+            return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
+        }
+        
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
+        
+        function pickColorFromCanvas(x, y) {
+            const ctx = colorCanvas.getContext('2d');
+            const data = ctx.getImageData(x, y, 1, 1).data;
+            return { r: data[0], g: data[1], b: data[2] };
+        }
+        
+        function updateColorPickerUI() {
+            const color = pickColorFromCanvas(pickerPosition.x, pickerPosition.y);
+            currentColor = rgbToHex(color.r, color.g, color.b);
+            
+            colorPreview.style.background = currentColor;
+            hexInput.value = currentColor;
+            rInput.value = color.r;
+            gInput.value = color.g;
+            bInput.value = color.b;
+            
+            updateLitCellsColor();
+        }
+        
+        // Event handlers for color picker
+        let isDraggingPicker = false;
+        let isDraggingSlider = false;
+        
+        colorCanvas.addEventListener('mousedown', (e) => {
+            isDraggingPicker = true;
+            handlePickerMove(e);
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (isDraggingPicker) handlePickerMove(e);
+            if (isDraggingSlider) handleSliderMove(e);
+        });
+        
+        document.addEventListener('mouseup', () => {
+            isDraggingPicker = false;
+            isDraggingSlider = false;
+        });
+        
+        colorCanvas.addEventListener('touchstart', (e) => {
+            isDraggingPicker = true;
+            handlePickerMove(e.touches[0]);
+        });
+        
+        document.addEventListener('touchmove', (e) => {
+            if (isDraggingPicker) handlePickerMove(e.touches[0]);
+            if (isDraggingSlider) handleSliderMove(e.touches[0]);
+        });
+        
+        document.addEventListener('touchend', () => {
+            isDraggingPicker = false;
+            isDraggingSlider = false;
+        });
+        
+        function handlePickerMove(e) {
+            const rect = colorCanvas.getBoundingClientRect();
+            let x = (e.clientX - rect.left) * (colorCanvas.width / rect.width);
+            let y = (e.clientY - rect.top) * (colorCanvas.height / rect.height);
+            x = Math.max(0, Math.min(200, x));
+            y = Math.max(0, Math.min(200, y));
+            pickerPosition = { x, y };
+            drawColorCanvas();
+            updateColorPickerUI();
+        }
+        
+        colorSlider.addEventListener('mousedown', (e) => {
+            isDraggingSlider = true;
+            handleSliderMove(e);
+        });
+        
+        colorSlider.addEventListener('touchstart', (e) => {
+            isDraggingSlider = true;
+            handleSliderMove(e.touches[0]);
+        });
+        
+        function handleSliderMove(e) {
+            const rect = colorSlider.getBoundingClientRect();
+            let y = (e.clientY - rect.top) * (colorSlider.height / rect.height);
+            y = Math.max(0, Math.min(200, y));
+            sliderPosition = y;
+            currentHue = (y / 200) * 360;
+            drawColorSlider();
+            drawColorCanvas();
+            updateColorPickerUI();
+        }
+        
+        // Input handlers
+        hexInput.addEventListener('input', () => {
+            const rgb = hexToRgb(hexInput.value);
+            if (rgb) {
+                const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+                currentHue = hsl.h;
+                const s = hsl.s * 2;
+                const l = (100 - hsl.l) * 2;
+                pickerPosition = { x: s, y: l };
+                sliderPosition = (hsl.h / 360) * 200;
+                drawColorSlider();
+                drawColorCanvas();
+                colorPreview.style.background = hexInput.value;
+                rInput.value = rgb.r;
+                gInput.value = rgb.g;
+                bInput.value = rgb.b;
+                currentColor = hexInput.value;
+                updateLitCellsColor();
+            }
+        });
+        
+        function updateFromRGB() {
+            const r = parseInt(rInput.value) || 0;
+            const g = parseInt(gInput.value) || 0;
+            const b = parseInt(bInput.value) || 0;
+            const clampedR = Math.max(0, Math.min(255, r));
+            const clampedG = Math.max(0, Math.min(255, g));
+            const clampedB = Math.max(0, Math.min(255, b));
+            
+            const hsl = rgbToHsl(clampedR, clampedG, clampedB);
+            currentHue = hsl.h;
+            const s = hsl.s * 2;
+            const l = (100 - hsl.l) * 2;
+            pickerPosition = { x: s, y: l };
+            sliderPosition = (hsl.h / 360) * 200;
+            drawColorSlider();
+            drawColorCanvas();
+            
+            const hex = rgbToHex(clampedR, clampedG, clampedB);
+            colorPreview.style.background = hex;
+            hexInput.value = hex;
+            currentColor = hex;
+            updateLitCellsColor();
+        }
+        
+        rInput.addEventListener('input', updateFromRGB);
+        gInput.addEventListener('input', updateFromRGB);
+        bInput.addEventListener('input', updateFromRGB);
+        
+        // Original grid functions
         function createGrid() {
             const newRows = parseInt(document.getElementById('rows').value);
             const newCols = parseInt(document.getElementById('cols').value);
@@ -406,19 +808,6 @@
             undoBtn.disabled = history.length === 0;
         }
         
-        function selectColor(element) {
-            document.querySelectorAll('.color-option').forEach(el => el.classList.remove('active'));
-            element.classList.add('active');
-            currentColor = element.dataset.color;
-            updateLitCellsColor();
-        }
-        
-        function customColorChange(element) {
-            currentColor = element.value;
-            document.querySelectorAll('.color-option').forEach(el => el.classList.remove('active'));
-            updateLitCellsColor();
-        }
-        
         function updateLitCellsColor() {
             const cells = document.querySelectorAll('.cell.lit');
             cells.forEach(cell => {
@@ -427,7 +816,6 @@
         }
         
         function saveImage() {
-            const grid = document.getElementById('gridToSave');
             const canvas = document.createElement('canvas');
             const scale = 4;
             
@@ -453,21 +841,12 @@
                     const x = padding + j * (cellSize + gap);
                     const y = padding + i * (cellSize + gap);
                     
-                    ctx.fillStyle = grid[i][j] ? (currentColor.includes('gradient') ? '#667eea' : currentColor) : 'white';
+                    ctx.fillStyle = grid[i][j] ? currentColor : 'white';
                     ctx.strokeStyle = grid[i][j] ? '#667eea' : '#d0d0d0';
                     ctx.lineWidth = borderWidth;
                     roundRect(ctx, x, y, cellSize, cellSize, 8);
                     ctx.fill();
                     ctx.stroke();
-                    
-                    if (grid[i][j] && currentColor.includes('gradient')) {
-                        const gradient = ctx.createLinearGradient(x, y, x + cellSize, y + cellSize);
-                        gradient.addColorStop(0, '#667eea');
-                        gradient.addColorStop(1, '#764ba2');
-                        ctx.fillStyle = gradient;
-                        roundRect(ctx, x, y, cellSize, cellSize, 8);
-                        ctx.fill();
-                    }
                 }
             }
             
@@ -491,6 +870,8 @@
             ctx.closePath();
         }
         
+        // Initialize
+        initColorPicker();
         createGrid();
     </script>
 </body>
